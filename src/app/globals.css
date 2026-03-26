@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg-primary: #0D0D0D;
+  --bg-card: #1A1A1A;
+  --bg-elevated: #222222;
+  --lemon-green: #4ADE80;
+  --lemon-green-dark: #22C55E;
+  --text-primary: #FFFFFF;
+  --text-secondary: #888888;
+  --text-tertiary: #666666;
+  --error: #E24B4A;
+  --warning: #EF9F27;
+  --border: #2a2a2a;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Swipe track fill gradient */
+.swipe-fill-gradient {
+  background: linear-gradient(90deg, #4ADE80, #22C55E);
+}
+
+/* Bio scan overlay */
+.bio-overlay {
+  background: rgba(13, 13, 13, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Confetti particles */
+@keyframes particle-fall {
+  0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+  100% { transform: translateY(-200px) rotate(720deg) scale(0); opacity: 0; }
+}
+
+.confetti-particle {
+  animation: particle-fall 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
