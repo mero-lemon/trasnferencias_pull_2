@@ -213,10 +213,10 @@ function SheetOverlay({ show, pull, onConfirm, onReject }: {
           <p className="text-t-secondary text-[14px] text-center tracking-lemon mb-4">Vas a enviar</p>
 
           {/* Round flag + amount */}
-          <div className="flex items-center justify-center gap-3 mb-5">
-            <RoundFlag size={36} />
-            <span className="text-white text-[32px] font-bold tracking-tight">{amtParts.int}</span>
-            <span className="text-t-secondary text-[18px] font-medium">ARS</span>
+          <div className="flex items-baseline justify-center gap-3 mb-5">
+            <div className="self-center"><RoundFlag size={36} /></div>
+            <span className="text-white text-[32px] font-bold tracking-tight leading-none">{amtParts.int}</span>
+            <span className="text-t-secondary text-[20px] font-medium leading-none">ARS</span>
           </div>
 
           <div className="h-px bg-[#333] mb-4" />
@@ -249,10 +249,10 @@ function SheetOverlay({ show, pull, onConfirm, onReject }: {
               </span>
             </div>
 
-            {/* Thumb — black pill circle */}
-            <div className="absolute top-[5px] w-[48px] h-[48px] rounded-full bg-black flex items-center justify-center pointer-events-none z-10 shadow-sm"
+            {/* Thumb — flush against left edge like real Lemon */}
+            <div className="absolute top-[4px] w-[50px] h-[50px] rounded-full bg-black flex items-center justify-center pointer-events-none z-10"
               style={{
-                left: `calc(${5 + swipeX * 80}%)`,
+                left: swipeX === 0 ? "4px" : `calc(${swipeX * 85}% + 4px)`,
                 transition: swiping ? "none" : "left 0.3s cubic-bezier(0.16,1,0.3,1)",
               }}>
               {swipeX > 0.7
@@ -264,7 +264,7 @@ function SheetOverlay({ show, pull, onConfirm, onReject }: {
             {/* Invisible touch target */}
             <div className="absolute top-0 h-full w-24 z-20 touch-none cursor-grab active:cursor-grabbing"
               style={{
-                left: `calc(${5 + swipeX * 80}% - 20px)`,
+                left: swipeX === 0 ? "0px" : `calc(${swipeX * 85}% - 16px)`,
                 transition: swiping ? "none" : "left 0.3s cubic-bezier(0.16,1,0.3,1)",
               }}
               onPointerDown={handleDown} onPointerMove={handleMove} onPointerUp={handleUp} onPointerCancel={handleUp} />
@@ -407,7 +407,7 @@ function ActivityMovScreen({ pull, onNotif, outcome }: { pull: Pull; onNotif: ()
       <Seg active="mov" onNotif={onNotif} onMov={() => {}} />
       <div className="flex-1 overflow-y-auto px-4">
         <p className="text-t-secondary text-[14px] font-medium mb-3 tracking-lemon">Hoy</p>
-        {outcome === "confirmed" && <MovRow icon={<RoundFlag />} title="Retiro de ARS - Transferencia pull" sub={today} amount={`+ ${fmtARS(pull.amount)}`} suffix=" ARS" positive highlight />}
+        {outcome === "confirmed" && <MovRow icon={<RoundFlag />} title="Débito autorizado — Brubank" sub={today} amount={`+ ${fmtARS(pull.amount)}`} suffix=" ARS" positive highlight />}
         <MovRow icon={<RoundFlag />} title="Retiro de ARS" sub={today} amount="- 13.000,00" suffix=" ARS" />
         <MovRow icon={<RoundFlag />} title="Rendimientos" sub={today} amount="+ 172,80 ARS" sub2="20.48%" positive />
         <MovRow icon={<CIcon c="#2775ca" l="$" />} title="Ganancias diarias" sub={today} amount="+ 0,03 USDC" sub2="≈ 35,72 ARS" positive />
