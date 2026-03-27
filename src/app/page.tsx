@@ -118,12 +118,12 @@ export default function Page() {
       <div className="w-[393px] h-[852px] bg-black rounded-[55px] border-[3px] border-[#333] overflow-hidden relative shadow-2xl shadow-black/60">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[126px] h-[37px] bg-black rounded-b-[20px] z-[70]" />
 
-        {(screen === "home" || screen === "modal") && <HomeContent pull={PULL} />}
+        {(screen === "home" || screen === "modal" || screen === "expired") && <HomeContent pull={PULL} />}
         {screen === "modal" && <SheetOverlay show={showSheet} pull={PULL} onConfirm={handleConfirm} onReject={handleReject} />}
+        {screen === "expired" && <ExpiredSheet pull={PULL} show={true} onBack={restart} />}
         {screen === "lockscreen" && <LockScreen showNotif={showNotif} onTapNotif={isExpiredFlow ? tapNotifExpired : tapNotif} pull={PULL} />}
         {screen === "biometric" && <BiometricScreen />}
         {screen === "success" && <SuccessScreen pull={PULL} />}
-        {screen === "expired" && <ExpiredScreen pull={PULL} onBack={restart} />}
         {screen === "activity_mov" && <ActivityMovScreen pull={PULL} onNotif={() => setScreen("activity_notif")} outcome={outcome} />}
         {screen === "activity_notif" && <ActivityNotifScreen pull={PULL} onMov={() => setScreen("activity_mov")} outcome={outcome} />}
 
@@ -436,33 +436,47 @@ function SuccessScreen({ pull }: { pull: Pull }) {
 /* ================================================================
    EXPIRED — Request timed out before user could act
    ================================================================ */
-function ExpiredScreen({ pull, onBack }: { pull: Pull; onBack: () => void }) {
+function ExpiredSheet({ pull, show, onBack }: { pull: Pull; show: boolean; onBack: () => void }) {
   return (
-    <div className="h-full bg-black flex flex-col items-center justify-center px-8 fade-in">
-      {/* Clock icon */}
-      <div className="w-[72px] h-[72px] rounded-full flex items-center justify-center mb-6" style={{ background: "rgba(239,159,39,0.12)" }}>
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EF9F27" strokeWidth="2" strokeLinecap="round">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 6v6l4 2" />
-        </svg>
+    <>
+      <div className="absolute inset-0 z-40 transition-opacity duration-300"
+        style={{ background: "rgba(0,0,0,0.7)", opacity: show ? 1 : 0, pointerEvents: show ? "auto" : "none" }} />
+
+      <div className="absolute left-0 right-0 bottom-0 z-50 transition-transform duration-500"
+        style={{ transform: show ? "translateY(0)" : "translateY(100%)", transitionTimingFunction: "cubic-bezier(0.16,1,0.3,1)" }}>
+        <div className="bg-[#1a1a1a] rounded-t-[28px] px-5 pb-10 pt-3">
+          <div className="flex justify-center mb-5">
+            <div className="w-10 h-1 rounded-full bg-[#444]" />
+          </div>
+
+          {/* Clock icon */}
+          <div className="flex justify-center mb-4">
+            <div className="w-[60px] h-[60px] rounded-full flex items-center justify-center" style={{ background: "rgba(239,159,39,0.12)" }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#EF9F27" strokeWidth="2" strokeLinecap="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+            </div>
+          </div>
+
+          <p className="text-white text-[18px] font-bold tracking-lemon mb-2 text-center">
+            Esta solicitud expiró
+          </p>
+          <p className="text-t-secondary text-[14px] text-center leading-relaxed tracking-lemon mb-1.5">
+            La solicitud de débito de <span className="text-white font-medium">{pull.bankName}</span> por <span className="text-white font-medium">${fmtARS(pull.amount)} ARS</span> ya no está disponible.
+          </p>
+          <p className="text-t-tertiary text-[13px] text-center tracking-lemon mb-6">
+            No se debitó nada de tu cuenta.
+          </p>
+
+          <button onClick={onBack}
+            className="w-full py-3.5 rounded-2xl font-medium text-[15px] tracking-lemon active:scale-[0.97] transition-transform text-black"
+            style={{ background: "#00f068" }}>
+            Volver al inicio
+          </button>
+        </div>
       </div>
-
-      <p className="text-white text-[22px] font-bold tracking-lemon mb-2 text-center">
-        Esta solicitud expiró
-      </p>
-      <p className="text-t-secondary text-[14px] text-center leading-relaxed tracking-lemon mb-2">
-        La solicitud de débito de <span className="text-white font-medium">{pull.bankName}</span> por <span className="text-white font-medium">${fmtARS(pull.amount)} ARS</span> ya no está disponible.
-      </p>
-      <p className="text-t-tertiary text-[13px] text-center tracking-lemon mb-8">
-        No se debitó nada de tu cuenta.
-      </p>
-
-      <button onClick={onBack}
-        className="w-full max-w-[280px] py-3.5 rounded-2xl font-medium text-[15px] tracking-lemon active:scale-[0.97] transition-transform text-black"
-        style={{ background: "#00f068" }}>
-        Volver al inicio
-      </button>
-    </div>
+    </>
   );
 }
 
@@ -528,32 +542,13 @@ function ActivityNotifScreen({ pull, onMov, outcome }: { pull: Pull; onMov: () =
           </div>
         )}
 
-        {outcome === "confirmed" && (
-          <div className="bg-[#1a1a1a] rounded-2xl p-4 border border-[#2a2a2a] slide-up">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,240,104,0.12)" }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00f068" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l3 3 5-6"/></svg>
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-white font-medium text-[14px] tracking-lemon">Transferencia Pull exitosa</span>
-                  <span className="text-t-tertiary text-[12px]">ahora</span>
-                </div>
-                <p className="text-t-secondary text-[13px] leading-snug tracking-lemon">
-                  Se debitaron <span style={{ color: "#00f068" }}>${fmtARS(pull.amount)} ARS</span> de tu cuenta en <span className="text-white">{pull.bankName}</span> hacia tu cuenta Lemon.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {!outcome && (
+        {!outcome || outcome === "confirmed" ? (
           <div className="flex flex-col items-center justify-center h-[300px]">
             <div className="w-14 h-14 rounded-full bg-[#1a1a1a] flex items-center justify-center mb-4"><BellIcon color="#666" /></div>
             <p className="text-white font-medium text-[16px] tracking-lemon mb-1">No hay notificaciones todavía</p>
             <p className="text-t-secondary text-[13px] text-center px-8 tracking-lemon">Acá vas a poder encontrar información acerca de tus monedas favoritas, amigos y promociones.</p>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
