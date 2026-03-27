@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { fmtARS, fmtParts } from "@/lib/format";
 
-type Screen = "home" | "lockscreen" | "biometric" | "modal" | "success" | "activity_mov" | "activity_notif";
+type Screen = "home" | "lockscreen" | "biometric" | "modal" | "success" | "expired" | "activity_mov" | "activity_notif";
 
 interface Pull {
   bankName: string;
@@ -66,17 +66,53 @@ export default function Page() {
     setOutcome(null);
   }, []);
 
+  const startFlowExpired = useCallback(() => {
+    setScreen("lockscreen");
+    setShowNotif(false);
+    setShowSheet(false);
+    setOutcome(null);
+    // Simulate: user sees push but takes too long
+    setTimeout(() => setShowNotif(true), 1500);
+  }, []);
+
+  const tapNotifExpired = useCallback(() => {
+    setShowNotif(false);
+    setScreen("biometric");
+    setTimeout(() => {
+      setScreen("expired");
+    }, 2200);
+  }, []);
+
   const isIdle = screen === "home" && !outcome;
-  const showRestart = screen === "activity_mov" || screen === "activity_notif";
+  const showRestart = screen === "activity_mov" || screen === "activity_notif" || screen === "expired";
+
+  // Track which flow we're in
+  const [isExpiredFlow, setIsExpiredFlow] = useState(false);
+
+  const startFlowNormal = useCallback(() => {
+    setIsExpiredFlow(false);
+    startFlow();
+  }, [startFlow]);
+
+  const startFlowExp = useCallback(() => {
+    setIsExpiredFlow(true);
+    startFlowExpired();
+  }, [startFlowExpired]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-neutral-950 p-4 gap-5">
       {isIdle && (
-        <button onClick={startFlow}
-          className="flex items-center gap-2.5 px-7 py-3.5 rounded-2xl font-medium text-[15px] tracking-lemon active:scale-[0.97] transition-transform"
-          style={{ background: "#00f068", color: "#000" }}>
-          <BellIcon color="black" /> Simular solicitud pull
-        </button>
+        <div className="flex gap-3">
+          <button onClick={startFlowNormal}
+            className="flex items-center gap-2.5 px-7 py-3.5 rounded-2xl font-medium text-[15px] tracking-lemon active:scale-[0.97] transition-transform"
+            style={{ background: "#00f068", color: "#000" }}>
+            <BellIcon color="black" /> Simular solicitud pull
+          </button>
+          <button onClick={startFlowExp}
+            className="flex items-center gap-2 px-5 py-3.5 rounded-2xl font-medium text-[14px] tracking-lemon active:scale-[0.97] transition-transform border border-[#444] text-[#999]">
+            Simular expirada
+          </button>
+        </div>
       )}
 
       <div className="w-[393px] h-[852px] bg-black rounded-[55px] border-[3px] border-[#333] overflow-hidden relative shadow-2xl shadow-black/60">
@@ -84,9 +120,10 @@ export default function Page() {
 
         {(screen === "home" || screen === "modal") && <HomeContent pull={PULL} />}
         {screen === "modal" && <SheetOverlay show={showSheet} pull={PULL} onConfirm={handleConfirm} onReject={handleReject} />}
-        {screen === "lockscreen" && <LockScreen showNotif={showNotif} onTapNotif={tapNotif} pull={PULL} />}
+        {screen === "lockscreen" && <LockScreen showNotif={showNotif} onTapNotif={isExpiredFlow ? tapNotifExpired : tapNotif} pull={PULL} />}
         {screen === "biometric" && <BiometricScreen />}
         {screen === "success" && <SuccessScreen pull={PULL} />}
+        {screen === "expired" && <ExpiredScreen pull={PULL} onBack={restart} />}
         {screen === "activity_mov" && <ActivityMovScreen pull={PULL} onNotif={() => setScreen("activity_notif")} outcome={outcome} />}
         {screen === "activity_notif" && <ActivityNotifScreen pull={PULL} onMov={() => setScreen("activity_mov")} outcome={outcome} />}
 
@@ -322,7 +359,7 @@ function LockScreen({ showNotif, onTapNotif, pull }: { showNotif: boolean; onTap
                   {pull.bankName} quiere debitar ${fmtARS(pull.amount)} de tu cuenta
                 </p>
                 <p className="text-white/60 text-[14px] leading-snug mt-1 tracking-lemon">
-                  Tenés 30 segundos para autorizar o rechazar esta solicitud.
+                  Ingresá para autorizar o rechazar esta solicitud.
                 </p>
               </div>
             </div>
@@ -392,6 +429,39 @@ function SuccessScreen({ pull }: { pull: Pull }) {
         <p className="text-t-tertiary text-[11px] uppercase tracking-widest mb-1">Tu nuevo saldo en Lemon</p>
         <p className="text-[24px] font-bold" style={{ color: "#00f068" }}>${fmtARS(newBal)} ARS</p>
       </div>
+    </div>
+  );
+}
+
+/* ================================================================
+   EXPIRED — Request timed out before user could act
+   ================================================================ */
+function ExpiredScreen({ pull, onBack }: { pull: Pull; onBack: () => void }) {
+  return (
+    <div className="h-full bg-black flex flex-col items-center justify-center px-8 fade-in">
+      {/* Clock icon */}
+      <div className="w-[72px] h-[72px] rounded-full flex items-center justify-center mb-6" style={{ background: "rgba(239,159,39,0.12)" }}>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EF9F27" strokeWidth="2" strokeLinecap="round">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 6v6l4 2" />
+        </svg>
+      </div>
+
+      <p className="text-white text-[22px] font-bold tracking-lemon mb-2 text-center">
+        Esta solicitud expiró
+      </p>
+      <p className="text-t-secondary text-[14px] text-center leading-relaxed tracking-lemon mb-2">
+        La solicitud de débito de <span className="text-white font-medium">{pull.bankName}</span> por <span className="text-white font-medium">${fmtARS(pull.amount)} ARS</span> ya no está disponible.
+      </p>
+      <p className="text-t-tertiary text-[13px] text-center tracking-lemon mb-8">
+        No se debitó nada de tu cuenta.
+      </p>
+
+      <button onClick={onBack}
+        className="w-full max-w-[280px] py-3.5 rounded-2xl font-medium text-[15px] tracking-lemon active:scale-[0.97] transition-transform text-black"
+        style={{ background: "#00f068" }}>
+        Volver al inicio
+      </button>
     </div>
   );
 }
