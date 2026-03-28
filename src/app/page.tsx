@@ -155,7 +155,7 @@ export default function Page() {
         {screen === "modal" && <SheetOverlay show={showSheet} pull={activePull} onConfirm={handleConfirm} onReject={handleReject} />}
         {screen === "expired" && <ExpiredSheet pull={activePull} show={true} onBack={restart} />}
         {screen === "insufficient" && <InsufficientSheet pull={activePull} show={true} onBack={handleInsufficientDismiss} />}
-        {screen === "lockscreen" && <LockScreen showNotif={showNotif} onTapNotif={tapNotif} pull={PULL_1} />}
+        {screen === "lockscreen" && <LockScreen showNotif={showNotif} onTapNotif={tapNotif} pull={PULL_1} queuedPull={mode === "double" ? PULL_2 : null} />}
         {screen === "biometric" && <BiometricScreen />}
         {screen === "success" && <SuccessScreen pull={activePull} />}
         {screen === "activity_mov" && <ActivityMovScreen outcomes={outcomes} onNotif={() => setScreen("activity_notif")} />}
@@ -386,9 +386,11 @@ function InsufficientSheet({ pull, show, onBack }: { pull: Pull; show: boolean; 
 /* ================================================================
    LOCK SCREEN
    ================================================================ */
-function LockScreen({ showNotif, onTapNotif, pull }: { showNotif: boolean; onTapNotif: () => void; pull: Pull }) {
+function LockScreen({ showNotif, onTapNotif, pull, queuedPull }: { showNotif: boolean; onTapNotif: () => void; pull: Pull; queuedPull: Pull | null }) {
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
+  const [showSecond, setShowSecond] = useState(false);
+
   useEffect(() => {
     const tick = () => {
       const d = new Date();
@@ -398,6 +400,15 @@ function LockScreen({ showNotif, onTapNotif, pull }: { showNotif: boolean; onTap
     tick(); const i = setInterval(tick, 1000); return () => clearInterval(i);
   }, []);
 
+  // Show second notification after a delay
+  useEffect(() => {
+    if (showNotif && queuedPull) {
+      const t = setTimeout(() => setShowSecond(true), 700);
+      return () => clearTimeout(t);
+    }
+    setShowSecond(false);
+  }, [showNotif, queuedPull]);
+
   return (
     <div className="h-full relative flex flex-col items-center" style={{ background: "linear-gradient(170deg, #1a1a2e 0%, #111122 30%, #0d0d1a 60%, #000 100%)" }}>
       <div className="w-full flex justify-between items-center px-8 pt-[52px] text-white/70 text-[13px] font-medium">
@@ -406,30 +417,23 @@ function LockScreen({ showNotif, onTapNotif, pull }: { showNotif: boolean; onTap
       </div>
       <p className="text-white/60 text-[17px] mt-5 tracking-wider font-medium">{date}</p>
       <p className="text-white text-[82px] font-bold tracking-tight leading-none mt-0">{time}</p>
-      {showNotif && (
+
+      {/* Second notification (behind, shows first in time) */}
+      {showNotif && queuedPull && showSecond && (
         <div className="absolute top-[230px] left-4 right-4 notif-enter cursor-pointer" onClick={onTapNotif}>
-          <div className="rounded-[22px] p-[14px] border border-white/[0.08]"
-            style={{ background: "rgba(30,30,30,0.75)", backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)" }}>
-            <div className="flex items-start gap-3">
-              <div className="w-[40px] h-[40px] rounded-[10px] bg-black flex items-center justify-center flex-shrink-0 border border-white/[0.06]">
-                <span className="font-bold text-[18px]" style={{ color: "#00f068" }}>L</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-center mb-0.5">
-                  <span className="text-white/90 font-medium text-[14px] tracking-lemon">LEMON</span>
-                  <span className="text-white/35 text-[12px]">ahora</span>
-                </div>
-                <p className="text-white font-medium text-[15px] leading-tight tracking-lemon">
-                  {pull.bankName} quiere debitar ${fmtARS(pull.amount)} de tu cuenta
-                </p>
-                <p className="text-white/60 text-[14px] leading-snug mt-1 tracking-lemon">
-                  Ingresá para autorizar o rechazar esta solicitud.
-                </p>
-              </div>
-            </div>
-          </div>
+          <PushNotif pull={queuedPull} time="ahora" />
         </div>
       )}
+
+      {/* First notification (on top, offset down if two) */}
+      {showNotif && (
+        <div className={`absolute left-4 right-4 notif-enter cursor-pointer ${queuedPull && showSecond ? "top-[340px]" : "top-[230px]"}`}
+          style={{ transition: "top 0.4s cubic-bezier(0.16,1,0.3,1)" }}
+          onClick={onTapNotif}>
+          <PushNotif pull={pull} time="ahora" />
+        </div>
+      )}
+
       <div className="absolute bottom-10 left-0 right-0 flex justify-between px-12">
         <div className="w-[50px] h-[50px] rounded-full bg-white/[0.06] flex items-center justify-center">
           <svg width="20" height="22" viewBox="0 0 20 22" fill="white" opacity="0.4"><path d="M10 1L2 6v10l8 5 8-5V6l-8-5z"/></svg>
@@ -439,6 +443,31 @@ function LockScreen({ showNotif, onTapNotif, pull }: { showNotif: boolean; onTap
         </div>
       </div>
       {showNotif && <p className="absolute bottom-[88px] text-white/25 text-[12px] tracking-lemon">Tocá la notificación</p>}
+    </div>
+  );
+}
+
+function PushNotif({ pull, time }: { pull: Pull; time: string }) {
+  return (
+    <div className="rounded-[22px] p-[14px] border border-white/[0.08]"
+      style={{ background: "rgba(30,30,30,0.75)", backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)" }}>
+      <div className="flex items-start gap-3">
+        <div className="w-[40px] h-[40px] rounded-[10px] bg-black flex items-center justify-center flex-shrink-0 border border-white/[0.06]">
+          <span className="font-bold text-[18px]" style={{ color: "#00f068" }}>L</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex justify-between items-center mb-0.5">
+            <span className="text-white/90 font-medium text-[14px] tracking-lemon">LEMON</span>
+            <span className="text-white/35 text-[12px]">{time}</span>
+          </div>
+          <p className="text-white font-medium text-[15px] leading-tight tracking-lemon">
+            {pull.bankName} quiere debitar ${fmtARS(pull.amount)} de tu cuenta
+          </p>
+          <p className="text-white/60 text-[14px] leading-snug mt-1 tracking-lemon">
+            Ingresá para autorizar o rechazar esta solicitud.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
