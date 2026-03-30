@@ -268,8 +268,7 @@ function SheetOverlay({ show, pull, onConfirm, onReject }: { show: boolean; pull
             </div>
             <div className="absolute top-0 h-full w-24 z-20 touch-none cursor-grab active:cursor-grabbing" style={{ left: swipeX === 0 ? "0px" : `calc(${swipeX * 85}% - 16px)`, transition: swiping ? "none" : "left 0.3s cubic-bezier(0.16,1,0.3,1)" }} onPointerDown={dn} onPointerMove={mv} onPointerUp={up} onPointerCancel={up} />
           </div>
-          <p className="text-t-tertiary text-[12px] text-center tracking-lemon pt-4">Esta solicitud expira a los 15 min de recibida.</p>
-          <button onClick={onReject} className="w-full pt-3"><span className="text-[#E24B4A] text-[14px] font-medium tracking-lemon">Rechazar solicitud</span></button>
+          <button onClick={onReject} className="w-full pt-5"><span className="text-[#E24B4A] text-[14px] font-medium tracking-lemon">Rechazar solicitud</span></button>
         </div>
       </div>
     </>
@@ -343,7 +342,7 @@ function LockScreen({ showPush, onTapPush, pull, queuedPull }: { showPush: boole
   );
 }
 function PushNotif({ pull }: { pull: Pull }) {
-  return <div className="rounded-[22px] p-[14px] border border-white/[0.08]" style={{ background: "rgba(30,30,30,0.75)", backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)" }}><div className="flex items-start gap-3"><div className="w-[40px] h-[40px] rounded-[10px] bg-black flex items-center justify-center flex-shrink-0 border border-white/[0.06]"><span className="font-bold text-[18px]" style={{ color: "#00f068" }}>L</span></div><div className="flex-1 min-w-0"><div className="flex justify-between items-center mb-0.5"><span className="text-white/90 font-medium text-[14px] tracking-lemon">LEMON</span><span className="text-white/35 text-[12px]">ahora</span></div><p className="text-white font-medium text-[15px] leading-tight tracking-lemon">{pull.bankName} quiere debitar ${fmtARS(pull.amount)} de tu cuenta</p><p className="text-white/60 text-[14px] leading-snug mt-1 tracking-lemon">Ingresá para autorizar o rechazar esta solicitud.</p></div></div></div>;
+  return <div className="rounded-[22px] p-[14px] border border-white/[0.08]" style={{ background: "rgba(30,30,30,0.75)", backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)" }}><div className="flex items-start gap-3"><div className="w-[40px] h-[40px] rounded-[10px] bg-black flex items-center justify-center flex-shrink-0 border border-white/[0.06]"><span className="font-bold text-[18px]" style={{ color: "#00f068" }}>L</span></div><div className="flex-1 min-w-0"><div className="flex justify-between items-center mb-0.5"><span className="text-white/90 font-medium text-[14px] tracking-lemon">LEMON</span><span className="text-white/35 text-[12px]">ahora</span></div><p className="text-white font-medium text-[15px] leading-tight tracking-lemon">{pull.bankName} quiere debitar ${fmtARS(pull.amount)} de tu cuenta</p><p className="text-white/60 text-[14px] leading-snug mt-1 tracking-lemon">Ingresá para autorizar o rechazar. Expira en 15 min.</p></div></div></div>;
 }
 
 /* ================================================================ BIOMETRIC ================================================================ */
