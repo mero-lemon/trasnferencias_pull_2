@@ -371,7 +371,7 @@ function InsufficientSheet({ pull, show, onBack }: { pull: Pull; show: boolean; 
           </div>
           <p className="text-white text-[18px] font-bold tracking-lemon mb-2 text-center">Saldo insuficiente</p>
           <p className="text-t-secondary text-[14px] text-center leading-relaxed tracking-lemon mb-1.5">
-            Tu cuenta en <span className="text-white font-medium">{pull.bankName}</span> no tiene fondos suficientes para cubrir el débito de <span className="text-white font-medium">${fmtARS(pull.amount)} ARS</span>.
+            No tenés saldo suficiente en tu cuenta Lemon para completar el débito de <span className="text-white font-medium">${fmtARS(pull.amount)} ARS</span> solicitado por <span className="text-white font-medium">{pull.bankName}</span>.
           </p>
           <p className="text-t-tertiary text-[13px] text-center tracking-lemon mb-6">No se debitó nada de tu cuenta.</p>
           <button onClick={onBack} className="w-full py-3.5 rounded-2xl font-medium text-[15px] tracking-lemon active:scale-[0.97] transition-transform text-black" style={{ background: "#00f068" }}>
