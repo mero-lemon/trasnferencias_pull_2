@@ -34,6 +34,20 @@ export default function Page() {
     setNotifs(prev => [mkNotif(type, pull), ...prev]);
   }, []);
 
+  // Replaces the pending notif for this pull with the resolved state.
+  // Falls back to prepending a new notif if no pending one is found.
+  const resolveNotif = useCallback((type: NotifType, pull: Pull) => {
+    setNotifs(prev => {
+      const idx = prev.findIndex(n => n.type === "pending" && n.pull.cbu === pull.cbu);
+      if (idx !== -1) {
+        const updated = [...prev];
+        updated[idx] = { ...updated[idx], type, time: now() };
+        return updated;
+      }
+      return [mkNotif(type, pull), ...prev];
+    });
+  }, []);
+
   const restart = useCallback(() => {
     setScreen("home"); setShowPush(false); setShowSheet(false);
     setMode("normal"); setActivePull(PULL_1); setOutcomes([]);
@@ -69,7 +83,7 @@ export default function Page() {
     setScreen("biometric");
     setTimeout(() => {
       if (mode === "expired") {
-        addNotif("expired", activePull);
+        resolveNotif("expired", activePull);
         setScreen("expired");
       } else {
         setScreen("modal");
@@ -82,13 +96,13 @@ export default function Page() {
     setShowSheet(false);
     if (mode === "insufficient") {
       setTimeout(() => {
-        addNotif("insufficient", activePull);
+        resolveNotif("insufficient", activePull);
         setOutcomes(prev => [...prev, { pull: activePull, result: "insufficient" }]);
         setScreen("insufficient");
       }, 800);
       return;
     }
-    addNotif("success", activePull);
+    resolveNotif("success", activePull);
     setOutcomes(prev => [...prev, { pull: activePull, result: "confirmed" }]);
     setScreen("success");
     setTimeout(() => {
@@ -102,7 +116,7 @@ export default function Page() {
 
   const handleReject = useCallback(() => {
     setShowSheet(false);
-    addNotif("rejected", activePull);
+    resolveNotif("rejected", activePull);
     setOutcomes(prev => [...prev, { pull: activePull, result: "rejected" }]);
     if (queuedPull) {
       setActivePull(queuedPull); setQueuedPull(null);
@@ -129,7 +143,7 @@ export default function Page() {
 
   const handleConfirmFromNotif = useCallback(() => {
     setShowSheet(false);
-    addNotif("success", activePull);
+    resolveNotif("success", activePull);
     setOutcomes([{ pull: activePull, result: "confirmed" }]);
     setScreen("success");
     setTimeout(() => setScreen("activity_mov"), 2500);
@@ -137,7 +151,7 @@ export default function Page() {
 
   const handleRejectFromNotif = useCallback(() => {
     setShowSheet(false);
-    addNotif("rejected", activePull);
+    resolveNotif("rejected", activePull);
     setOutcomes([{ pull: activePull, result: "rejected" }]);
     setScreen("activity_notif");
   }, [activePull, addNotif]);
