@@ -383,7 +383,7 @@ function ActivityMovScreen({ outcomes, onNotif }: { outcomes: Array<{ pull: Pull
       <Seg active="mov" onNotif={onNotif} onMov={() => {}} />
       <div className="flex-1 overflow-y-auto px-4">
         <p className="text-t-secondary text-[14px] font-medium mb-3 tracking-lemon">Hoy</p>
-        {confirmed.map((o, i) => <MovRow key={`c-${i}`} icon={<RoundFlag />} title={`Débito autorizado — ${o.pull.bankName}`} sub={today} amount={`- ${fmtARS(o.pull.amount)}`} suffix=" ARS" highlight />)}
+        {confirmed.map((o, i) => <MovRow key={`c-${i}`} icon={<RoundFlag />} title={`Débito autorizado — ${o.pull.bankName}`} sub={today} amount={`- ${fmtARS(o.pull.amount)}`} suffix=" ARS" />)}
         <MovRow icon={<RoundFlag />} title="Retiro de ARS" sub={today} amount="- 13.000,00" suffix=" ARS" />
         <MovRow icon={<RoundFlag />} title="Rendimientos" sub={today} amount="+ 172,80 ARS" sub2="20.48%" positive />
         <MovRow icon={<CIcon c="#2775ca" l="$" />} title="Ganancias diarias" sub={today} amount="+ 0,03 USDC" sub2="≈ 35,72 ARS" positive />
